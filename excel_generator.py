@@ -10,7 +10,7 @@ def create_excel_report(data_rows, date_val=None, predio_val=1):
     """
     Generates openpyxl Workbook matching image structure:
     Headers: FECHA | Dia | # | INCIDENCIA | PREDIO | NOMBRE | DEPARTAMENTO | Entrada | Salida
-    If INCIDENCIA is blank, leaves the cell empty.
+    If INCIDENCIA is blank, sets value to 'PRESENTE'.
     """
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -65,8 +65,12 @@ def create_excel_report(data_rows, date_val=None, predio_val=1):
         row_fecha = str(item.get("FECHA", date_str)).strip()
         row_dia = str(item.get("Dia", day_str)).strip()
         code = str(item.get("#", item.get("cedula", item.get("codigo", "")))).strip()
-        # Keep INCIDENCIA blank if empty
-        incidencia = str(item.get("INCIDENCIA", item.get("incidencia", ""))).strip()
+        
+        # Set to PRESENTE if empty
+        incidencia = str(item.get("INCIDENCIA", item.get("incidencia", "PRESENTE"))).strip()
+        if not incidencia:
+            incidencia = "PRESENTE"
+            
         predio = item.get("PREDIO", predio_val)
         nombre = str(item.get("NOMBRE", item.get("nombre", ""))).strip().upper()
         depto = str(item.get("DEPARTAMENTO", item.get("departamento", ""))).strip().upper()
@@ -110,10 +114,10 @@ def create_excel_report(data_rows, date_val=None, predio_val=1):
         ent_cell.alignment = Alignment(horizontal="center")
         sal_cell.alignment = Alignment(horizontal="center")
 
-        # Soft pink highlight if entry or exit is missing/blank AND no incidence note like VAC, INC, LIBRE
-        if not ent and not incidencia:
+        # Soft pink highlight if entry or exit is missing/blank
+        if not ent and (incidencia == "PRESENTE" or not incidencia):
             ent_cell.fill = pink_fill
-        if not sal and not incidencia:
+        if not sal and (incidencia == "PRESENTE" or not incidencia):
             sal_cell.fill = pink_fill
 
         # Apply borders to all 9 columns

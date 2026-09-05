@@ -191,7 +191,7 @@ if st.session_state["has_processed"] or st.session_state["parsed_rows"]:
             'departamento': '',
             'hora_entrada': '',
             'hora_salida': '',
-            'incidencia': '',
+            'incidencia': 'PRESENTE',
             'predio': 1
         }]
 
@@ -210,7 +210,9 @@ if st.session_state["has_processed"] or st.session_state["parsed_rows"]:
     rows_for_df = []
     for item in raw_data:
         code = str(item.get("#", item.get("cedula", item.get("codigo", "")))).strip()
-        inc = str(item.get("INCIDENCIA", item.get("incidencia", ""))).strip()
+        inc = str(item.get("INCIDENCIA", item.get("incidencia", "PRESENTE"))).strip()
+        if not inc:
+            inc = "PRESENTE"
             
         detected_p = item.get("predio", item.get("PREDIO", 1))
         try:
@@ -248,7 +250,7 @@ if st.session_state["has_processed"] or st.session_state["parsed_rows"]:
             "FECHA": st.column_config.TextColumn("FECHA", required=True),
             "Dia": st.column_config.TextColumn("Dia", required=True),
             "#": st.column_config.TextColumn("#", required=True),
-            "INCIDENCIA": st.column_config.TextColumn("INCIDENCIA", default=""),
+            "INCIDENCIA": st.column_config.TextColumn("INCIDENCIA", default="PRESENTE"),
             "PREDIO": st.column_config.NumberColumn("PREDIO", min_value=1, max_value=20, default=1),
             "NOMBRE": st.column_config.TextColumn("NOMBRE", required=True),
             "DEPARTAMENTO": st.column_config.TextColumn("DEPARTAMENTO"),
@@ -263,13 +265,14 @@ if st.session_state["has_processed"] or st.session_state["parsed_rows"]:
     tot_rows = len(recalculated_rows)
     with_ent = sum(1 for r in recalculated_rows if str(r.get("Entrada", "")).strip())
     with_sal = sum(1 for r in recalculated_rows if str(r.get("Salida", "")).strip())
-    with_inc = sum(1 for r in recalculated_rows if str(r.get("INCIDENCIA", "")).strip())
+    pres_count = sum(1 for r in recalculated_rows if str(r.get("INCIDENCIA", "")).upper() == "PRESENTE")
+    novel_count = sum(1 for r in recalculated_rows if str(r.get("INCIDENCIA", "")).upper() != "PRESENTE" and str(r.get("INCIDENCIA", "")).strip() != "")
     
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Total Empleados Transcritos", tot_rows)
     m2.metric("Con Hora de Entrada", with_ent)
-    m3.metric("Con Hora de Salida", with_sal)
-    m4.metric("Con Incidencia (VAC, INC, etc.)", with_inc)
+    m3.metric("Con Marca PRESENTE", pres_count)
+    m4.metric("Con Incidencia (VAC, INC, etc.)", novel_count)
 
     st.markdown("---")
     

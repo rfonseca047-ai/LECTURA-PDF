@@ -51,7 +51,7 @@ def extract_table_from_image_gemini(image, api_key=None):
     """
     Calls Gemini Multimodal API.
     Extracts raw handwritten data, PREDIO from title, and handwritten INCIDENCIA (VAC, INC, LIBRE, AUSENCIA).
-    If no incidence note is written, leaves incidencia as blank string "".
+    If no incidence note is written, adds 'PRESENTE'.
     """
     from google import genai
     from google.genai import types
@@ -76,12 +76,12 @@ def extract_table_from_image_gemini(image, api_key=None):
        - "departamento": Departamento u Oficina
        - "hora_entrada": Hora anotada a lapicero (ej: 6:52, 06:05, 17:55, 6:55, 7:53, 05:52, 6:36, 6:45, 06:55, 05:57 o "" si está en blanco)
        - "hora_salida": Hora anotada a lapicero (ej: 18:00, 06:00, 17:05, 17:14, 17:03, 17:00, 17:02, 12:06 o "" si está en blanco)
-       - "incidencia": Si en manuscrito a lapicero lleva escrito VAC, INC, LIBRE, AUSENCIA u otra nota manuscrita en la fila, transcríbela tal cual. SI NO HAY NINGUNA NOTA O ESTÁ EN BLANCO, COLOCA EXACTAMENTE UN TEXTO VACÍO "".
+       - "incidencia": Si en manuscrito a lapicero lleva escrito VAC, INC, LIBRE, AUSENCIA u otra nota manuscrita en la fila, transcríbela tal cual. SI NO HAY NINGUNA NOTA O ESTÁ EN BLANCO, COLOCA EXACTAMENTE 'PRESENTE'.
        - "predio": Número de predio detectado en el título (ej: 1, 2, 3). Si no se menciona explícitamente, coloca 1.
 
     INSTRUCCIONES CRÍTICAS:
     - REGLA CRÍTICA DE NOMBRES TACHADOS: Si el nombre de un empleado o su renglón entero está TACHADO o CANCELADO a lapicero/bolígrafo (una línea horizontal o tachadura cruzando el nombre), NO LO EXTRAIGAS. Omite a los empleados tachados por completo.
-    - REGLA DE INCIDENCIA EN BLANCO: Si no hay notas manuscritas como VAC, INC, LIBRE o AUSENCIA, la llave "incidencia" DEBE SER "". NO inventes ni coloques "Presente" si está en blanco.
+    - REGLA DE INCIDENCIA: Si no hay notas manuscritas como VAC, INC, LIBRE o AUSENCIA, la llave "incidencia" DEBE SER 'PRESENTE'.
     - Devuelve ÚNICAMENTE un arreglo JSON con los objetos de los empleados válidos (no tachados).
     - Formato exacto de cada objeto JSON:
       {
@@ -90,7 +90,7 @@ def extract_table_from_image_gemini(image, api_key=None):
         "departamento": "OFICINA",
         "hora_entrada": "06:52",
         "hora_salida": "",
-        "incidencia": "VAC",
+        "incidencia": "PRESENTE",
         "predio": 3
       }
     - Transcribe fielmente las horas escritas a lapicero. Si está vacía sin trazo de lapicero, coloca "".
@@ -162,6 +162,8 @@ def extract_table_from_image_gemini(image, api_key=None):
                 pred_val = 1
                 
             inc_val = str(item.get("incidencia", item.get("INCIDENCIA", ""))).strip()
+            if not inc_val:
+                inc_val = "PRESENTE"
 
             normalized_data.append({
                 "cedula": str(item.get("cedula", item.get("codigo", item.get("#", "")))),
