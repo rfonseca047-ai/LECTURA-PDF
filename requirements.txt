@@ -4,3 +4,4 @@ openpyxl
 pillow
 pymupdf
 google-genai
+python-dotenv
