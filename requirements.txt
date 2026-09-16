@@ -1,6 +1,0 @@
-streamlit
-pandas
-openpyxl
-pillow
-pymupdf
-google-genai
